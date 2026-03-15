@@ -3,34 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>職場實習生性格測驗｜專屬類型探索</title>
+    <title>職場實習生性格測驗｜未來職人探索</title>
     <style>
         :root { --primary: #2c3e50; --accent: #3498db; --bg: #f4f7f6; --success: #27ae60; --danger: #e74c3c; --info: #3182ce; }
-        body { font-family: "Microsoft JhengHei", sans-serif; background: var(--bg); color: var(--primary); line-height: 1.6; margin: 0; padding: 20px; }
-        .container { max-width: 650px; margin: 0 auto; background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
-        h1 { text-align: center; color: var(--primary); font-size: 24px; }
-        .intro-text { text-align: center; color: #7f8c8d; margin-bottom: 30px; }
+        body { font-family: "Microsoft JhengHei", sans-serif; background: var(--bg); color: var(--primary); line-height: 1.6; margin: 0; padding: 15px; }
+        .container { max-width: 650px; margin: 0 auto; background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        h1 { text-align: center; color: var(--primary); font-size: 22px; margin-bottom: 10px; }
+        .q-progress-bar { height: 8px; background: #eee; border-radius: 4px; margin-bottom: 20px; overflow: hidden; }
+        .q-progress-fill { height: 100%; background: var(--accent); width: 0%; transition: 0.3s; }
         .question-box { display: none; }
-        .question-box.active { display: block; animation: slideIn 0.4s ease-out; }
-        @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .q-progress { font-size: 14px; color: var(--accent); font-weight: bold; margin-bottom: 10px; text-align: center; }
+        .question-box.active { display: block; animation: fadeIn 0.4s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         .options-list { list-style: none; padding: 0; }
-        .options-list li { margin-bottom: 12px; }
-        .btn-opt { width: 100%; padding: 16px; border: 1.5px solid #dce4ec; background: white; border-radius: 12px; cursor: pointer; transition: all 0.2s; font-size: 16px; text-align: left; color: #34495e; }
-        .btn-opt:hover { border-color: var(--accent); background: #ebf5fb; color: var(--accent); }
+        .btn-opt { width: 100%; padding: 16px; margin-bottom: 10px; border: 1.5px solid #dce4ec; background: white; border-radius: 12px; cursor: pointer; font-size: 16px; text-align: left; }
+        .btn-opt:hover { border-color: var(--accent); background: #ebf5fb; }
         
-        #result-area { display: none; text-align: left; }
-        .result-title { text-align: center; font-size: 22px; color: #7f8c8d; margin-bottom: 5px; }
-        .type-name { text-align: center; font-size: 32px; color: var(--accent); font-weight: 900; margin-bottom: 30px; border-bottom: 3px solid var(--accent); display: inline-block; width: 100%; padding-bottom: 10px; }
-        
-        .card { padding: 20px; border-radius: 12px; margin-bottom: 20px; }
+        #result-area { display: none; }
+        .type-name { text-align: center; font-size: 28px; color: var(--accent); font-weight: 900; margin: 20px 0; border-bottom: 3px solid var(--accent); padding-bottom: 10px; }
+        .card { padding: 15px; border-radius: 12px; margin-bottom: 15px; font-size: 15px; }
         .card-light { background: #f0fff4; border-left: 6px solid var(--success); }
         .card-shadow { background: #fff5f5; border-left: 6px solid var(--danger); }
         .card-advice { background: #ebf8ff; border: 2px dashed var(--info); }
-        .card-label { font-weight: bold; font-size: 18px; margin-bottom: 8px; display: flex; align-items: center; }
-        
-        #status-msg { text-align: center; font-size: 13px; color: #95a5a6; margin-top: 20px; }
-        .restart-btn { display: block; width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 10px; font-size: 16px; cursor: pointer; margin-top: 20px; }
+        .card-label { font-weight: bold; margin-bottom: 5px; font-size: 17px; }
+        #status-msg { text-align: center; font-size: 12px; color: #95a5a6; }
+        .restart-btn { width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 10px; cursor: pointer; margin-top: 10px; }
     </style>
 </head>
 <body>
@@ -38,36 +34,25 @@
 <div class="container">
     <div id="quiz-ui">
         <h1>🔍 職場實習生類型測驗</h1>
-        <p class="intro-text">探索你的職場分身，了解如何在實習中進化！</p>
+        <div class="q-progress-bar"><div class="q-progress-fill" id="pb-fill"></div></div>
         <div id="question-content"></div>
     </div>
 
     <div id="result-area">
-        <p class="result-title">測驗完成！你的類型是：</p>
+        <h2 style="text-align:center;">測驗結果分析</h2>
         <div id="display-type" class="type-name"></div>
         
-        <div class="card card-light">
-            <div class="card-label">✨ 正向光芒</div>
-            <div id="text-light"></div>
-        </div>
-        
-        <div class="card card-shadow">
-            <div class="card-label">⚠️ 可能困擾</div>
-            <div id="text-shadow"></div>
-        </div>
-        
-        <div class="card card-advice">
-            <div class="card-label">💡 進化修煉建議</div>
-            <div id="text-advice"></div>
-        </div>
+        <div class="card card-light"><div class="card-label">✨ 正向光芒</div><div id="text-light"></div></div>
+        <div class="card card-shadow"><div class="card-label">⚠️ 可能困擾</div><div id="text-shadow"></div></div>
+        <div class="card card-advice"><div class="card-label">💡 進化修煉建議</div><div id="text-advice"></div></div>
 
-        <p id="status-msg">正在同步數據至教師系統...</p>
+        <p id="status-msg">數據回傳中...</p>
         <button class="restart-btn" onclick="location.reload()">重新測驗</button>
     </div>
 </div>
 
 <script>
-    // --- 請在此處替換為您的 Google Apps Script 網址 ---
+    // --- 重要：請將下方的網址替換為您的 Google Apps Script 網址 ---
     const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxa4bHsIL4rrJ2t-XE5FQbpM1jVcP2v9Ijbltz8zQXZkAdTdPiWHl0cDuC1Z4kmqdJSMg/exec';
 
     const quizData = [
@@ -84,7 +69,7 @@
         { q: "在團隊中你覺得自己最像？", a: "大腦（分析決策）", b: "心臟（聯繫感情）", c: "手腳（行動實驗）", d: "脊椎（穩定支撐）" },
         { q: "工作出錯需要「扛責」時，你的態度是？", a: "絕對負責並提交改進報告", b: "因為拖累大家而難過很久", c: "解釋動機希望大家看重初衷", d: "認錯接受處分後更加謹慎" },
         { q: "對於職場中的「社交應酬」看法？", a: "除非對升遷有助否則浪費時間", b: "非常重要是建立默契時刻", c: "喜歡有趣討厭死板應酬", d: "覺得累只想趕快回家休息" },
-        { q: "主管稱讚你做得好，內心獨白是？", a: "正常發揮，我確實比別人有效率", b: "主管終於認可我了要更努力", c: "下次試更瘋狂做法讓他驚訝", d: "鬆口氣不用擔心表現不好了" },
+        { q: "主管稱稱讚你做得好，內心獨白是？", a: "正常發揮，我確實比別人有效率", b: "主管終於認可我了要更努力", c: "下次試更瘋狂做法讓他驚訝", d: "鬆口氣不用擔心表現不好了" },
         { q: "創意被主管當眾否決時？", a: "詢問理由回家優化再提", b: "覺得受挫是否我這個人有問題", c: "覺得主管沒眼光默默給他扣分", d: "喔好那我就照舊方法做" },
         { q: "發現還有很多技能沒學會，你會？", a: "整理清單找主管前輩請教", b: "結交到的朋友比技能更重要", c: "打算回家自己實驗不被限制", d: "遺憾但不敢主動要求學習" },
         { q: "在忙碌環境中，最受不了哪種同事？", a: "慢吞吞還一直出錯的人", b: "口氣差不顧別人感受的人", c: "墨守成規一點彈性都沒有的人", d: "喜怒無常指令變來變去的人" },
@@ -96,76 +81,15 @@
     let tally = { a: 0, b: 0, c: 0, d: 0 };
     let step = 0;
 
-    function draw() {
-        if (step >= quizData.length) { finish(); return; }
+    function render() {
+        if (step >= quizData.length) { showResult(); return; }
         const item = quizData[step];
+        document.getElementById('pb-fill').style.width = ((step / quizData.length) * 100) + "%";
         document.getElementById('question-content').innerHTML = `
             <div class="question-box active">
-                <div class="q-progress">進度：${step + 1} / ${quizData.length}</div>
-                <p style="font-size:18px; font-weight:bold; margin-bottom:20px;">${item.q}</p>
+                <p><strong>Q${step + 1}: ${item.q}</strong></p>
                 <ul class="options-list">
                     <li><button class="btn-opt" onclick="tap('a')">(A) ${item.a}</button></li>
                     <li><button class="btn-opt" onclick="tap('b')">(B) ${item.b}</button></li>
                     <li><button class="btn-opt" onclick="tap('c')">(C) ${item.c}</button></li>
-                    <li><button class="btn-opt" onclick="tap('d')">(D) ${item.d}</button></li>
-                </ul>
-            </div>`;
-    }
-
-    function tap(choice) { tally[choice]++; step++; draw(); }
-
-    function finish() {
-        document.getElementById('quiz-ui').style.display = 'none';
-        document.getElementById('result-area').style.display = 'block';
-        window.scrollTo(0, 0);
-
-        let top = Object.keys(tally).reduce((a, b) => tally[a] > tally[b] ? a : b);
-        let finalType = "";
-        let lightText = "";
-        let shadowText = "";
-        let adviceText = "";
-
-        if (top === 'a') {
-            finalType = "精準高效的領航員";
-            lightText = "你是單位的戰鬥力基石，邏輯極強，追求卓越與效率。交給你的任務總能準確達成。";
-            shadowText = "追求效率時容易顯得冷漠，對人要求過高會讓同事壓力巨大，甚至覺得你像台冰冷的機器。";
-            adviceText = "在指正別人前先說聲「辛苦了」。學習理解職場中除了正確與否，還有情感的潤滑。";
-        } else if (top === 'b') {
-            finalType = "溫暖感性的潤滑劑";
-            lightText = "具備極高共感力，能觀察他人情緒並緩解緊繃氣氛，是大家最信任的傾訴對象。";
-            shadowText = "容易因為在意他人感受而難以拒絕無理要求，或為了顧及面子不敢指出錯誤，導致進度受阻。";
-            adviceText = "練習「對事不對人」。指出問題並不代表你討厭對方，而是對團隊的成果負責。";
-        } else if (top === 'c') {
-            finalType = "靈感爆棚的開拓者";
-            lightText = "點子多、敢挑戰。你能為僵化的流程帶來創意，在解決突發問題時總能閃耀光芒。";
-            shadowText = "想法多但容易「三分鐘熱度」，常把繁瑣的收尾工作留給同事，或因忽視 SOP 導致風險。";
-            adviceText = "練習完整執行一個點子直到「落地」為止。理解規則是為了安全，這能建立你的專業信用。";
-        } else {
-            finalType = "踏實穩定的守護者";
-            lightText = "沉穩耐操，對交辦事務極度負責。你是單位最穩定的基石，能把平凡的事做得極其細緻。";
-            shadowText = "應變力較弱，遇到計畫變動容易慌張。習慣被動等待指令，會讓主管覺得你缺乏主見。";
-            adviceText = "練習「主動回報」進度，並在執行任務時多想一個「備案」，這能提升你的應變自信。";
-        }
-
-        document.getElementById('display-type').innerText = finalType;
-        document.getElementById('text-light').innerText = lightText;
-        document.getElementById('text-shadow').innerText = shadowText;
-        document.getElementById('text-advice').innerText = adviceText;
-
-        // 背景上傳 Google Sheet
-        fetch(GOOGLE_SCRIPT_URL, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: 'result=' + encodeURIComponent(finalType)
-        }).then(() => {
-            document.getElementById('status-msg').innerText = "數據已成功回傳至教師系統，感謝您的填寫！";
-        }).catch(() => {
-            document.getElementById('status-msg').innerText = "上傳失敗，但您的測驗結果已顯示如上。";
-        });
-    }
-
-    draw();
-</script>
-</body>
-</html>
+                    <li>
