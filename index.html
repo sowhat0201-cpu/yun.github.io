@@ -3,31 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>職場實習生類型測驗｜未來職人探險</title>
+    <title>職場實習生類型測驗</title>
     <style>
-        :root {
-            --primary: #2c3e50;
-            --accent: #3498db;
-            --bg: #f4f7f6;
-        }
-        body { font-family: "Microsoft JhengHei", sans-serif; background: var(--bg); color: var(--primary); line-height: 1.6; margin: 0; padding: 20px; }
+        :root { --primary: #2c3e50; --accent: #3498db; --bg: #f4f7f6; }
+        body { font-family: "Microsoft JhengHei", sans-serif; background: var(--bg); color: var(--primary); padding: 20px; }
         .container { max-width: 700px; margin: 0 auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        h1 { text-align: center; color: var(--accent); }
-        .intro { margin-bottom: 30px; border-bottom: 2px solid #eee; padding-bottom: 20px; }
         .question { display: none; }
-        .question.active { display: block; animation: fadeIn 0.5s; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .question.active { display: block; }
         .options { list-style: none; padding: 0; }
-        .options li { margin: 10px 0; }
-        button { width: 100%; padding: 12px; border: 1px solid var(--accent); background: white; border-radius: 8px; cursor: pointer; transition: 0.3s; font-size: 16px; text-align: left; }
+        button { width: 100%; padding: 12px; margin: 5px 0; border: 1px solid var(--accent); background: white; border-radius: 8px; cursor: pointer; text-align: left; }
         button:hover { background: var(--accent); color: white; }
-        .progress { margin-bottom: 20px; height: 10px; background: #eee; border-radius: 5px; overflow: hidden; }
-        .progress-bar { height: 100%; background: var(--accent); width: 0%; transition: 0.3s; }
         #result { display: none; }
-        .type-box { padding: 20px; border-radius: 10px; margin-top: 20px; }
         .light { border-left: 5px solid #27ae60; background: #f0fff4; padding: 10px; margin: 10px 0; }
         .shadow { border-left: 5px solid #e74c3c; background: #fff5f5; padding: 10px; margin: 10px 0; }
-        .advice { background: #ebf8ff; padding: 15px; border-radius: 8px; border: 1px dashed #3182ce; }
+        #loading-msg { color: #888; font-size: 0.9em; margin-top: 10px; font-style: italic; }
     </style>
 </head>
 <body>
@@ -35,21 +24,22 @@
 <div class="container">
     <div id="quiz-box">
         <h1>🔍 職場實習生類型測驗</h1>
-        <div class="intro">這是一場職涯冒險。請根據第一直覺選擇最符合你的選項。</div>
-        <div class="progress"><div class="progress-bar" id="pb"></div></div>
         <div id="question-container"></div>
     </div>
 
     <div id="result">
         <h1>📊 你的職涯分身是...</h1>
         <div id="result-content"></div>
-        <button onclick="location.reload()" style="text-align:center; margin-top:20px;">重新測驗</button>
+        <p id="loading-msg">數據同步中...</p>
+        <button onclick="location.reload()" style="text-align:center;">重新測驗</button>
     </div>
 </div>
 
 <script>
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbxa4bHsIL4rrJ2t-XE5FQbpM1jVcP2v9Ijbltz8zQXZkAdTdPiWHl0cDuC1Z4kmqdJSMg/exec'; // <-- 重要：置換此處
+
     const questions = [
-        { q: "實習第一天報到，面對全新環境與同事，你會？", a: "觀察職稱與座位建立架構圖", b: "微笑打招呼記住大家名字", c: "思考辦公室動線哪裡可以更酷", d: "安靜待在位子等待指令" },
+        { q: "實習報到第一天，面對全新環境與同事，你會？", a: "觀察職稱與座位建立架構圖", b: "微笑打招呼記住大家名字", c: "思考辦公室動線哪裡可以更酷", d: "安靜待在位子等待指令" },
         { q: "拿到厚厚一疊「實習生須知」，你的閱讀習慣是？", a: "直接看最後的考核標準", b: "先看福利與員工聚餐部分", c: "隨意翻閱希望有圖解版", d: "從第一頁開始認真劃重點" },
         { q: "主管正在教導複雜的操作流程，你通常會？", a: "邊聽邊思考有沒有省時捷徑", b: "觀察主管表情表現出受教樣子", c: "想試試看不用手冊能不能成功", d: "拿出筆記本詳細記錄動作" },
         { q: "午高峰現場混亂且每個人口氣不好，你會？", a: "進入自動模式精準完成任務", b: "壓力很大擔心大家在生我的氣", c: "覺得刺激想跳出來指揮大家", d: "更加小心翼翼深怕犯錯被罵" },
@@ -75,65 +65,42 @@
     let currentQ = 0;
 
     function renderQuestion() {
-        if (currentQ >= questions.length) {
-            showResult();
-            return;
-        }
+        if (currentQ >= questions.length) { showResult(); return; }
         const qData = questions[currentQ];
-        let html = `<div class="question active">
-            <p><strong>第 ${currentQ + 1} 題：${qData.q}</strong></p>
-            <ul class="options">
-                <li><button onclick="next('a')">(A) ${qData.a}</button></li>
-                <li><button onclick="next('b')">(B) ${qData.b}</button></li>
-                <li><button onclick="next('c')">(C) ${qData.c}</button></li>
-                <li><button onclick="next('d')">(D) ${qData.d}</button></li>
-            </ul>
-        </div>`;
-        document.getElementById('question-container').innerHTML = html;
-        document.getElementById('pb').style.width = ((currentQ / questions.length) * 100) + "%";
+        document.getElementById('question-container').innerHTML = `
+            <div class="question active">
+                <p><strong>Q${currentQ + 1}: ${qData.q}</strong></p>
+                <ul class="options">
+                    <li><button onclick="next('a')">(A) ${qData.a}</button></li>
+                    <li><button onclick="next('b')">(B) ${qData.b}</button></li>
+                    <li><button onclick="next('c')">(C) ${qData.c}</button></li>
+                    <li><button onclick="next('d')">(D) ${qData.d}</button></li>
+                </ul>
+            </div>`;
     }
 
-    function next(choice) {
-        scores[choice]++;
-        currentQ++;
-        renderQuestion();
-    }
+    function next(choice) { scores[choice]++; currentQ++; renderQuestion(); }
 
     function showResult() {
         document.getElementById('quiz-box').style.display = 'none';
         document.getElementById('result').style.display = 'block';
-        
         let maxScore = Math.max(scores.a, scores.b, scores.c, scores.d);
-        let type = '';
-        let content = '';
+        let type = (scores.a === maxScore) ? "精準高效的領航員" : (scores.b === maxScore) ? "溫暖感性的潤滑劑" : (scores.c === maxScore) ? "靈感爆棚的開拓者" : "踏實穩定的守護者";
 
-        if (scores.a === maxScore) {
-            type = "精準高效的領航員";
-            content = `<div class='light'><strong>✨ 正向光芒：</strong>邏輯強、追求卓越。是單位中可靠的戰鬥力。</div>
-                       <div class='shadow'><strong>⚠️ 可能困擾：</strong>忽略情感顯得冷漠，對人要求過高時會讓同事壓力巨大。</div>
-                       <div class='advice'><strong>💡 修煉建議：</strong>學會在指正前先說聲「辛苦了」，理解職場不只有 0 與 1。</div>`;
-        } else if (scores.b === maxScore) {
-            type = "溫暖感性的潤滑劑";
-            content = `<div class='light'><strong>✨ 正向光芒：</strong>共感力高，能緩解氣氛，是大家的心理支柱。</div>
-                       <div class='shadow'><strong>⚠️ 可能困擾：</strong>難以拒絕無理要求，可能為了顧及面子而不敢指出問題。</div>
-                       <div class='advice'><strong>💡 修煉建議：</strong>練習「對事不對人」，好的情緒邊界才能讓你走得更遠。</div>`;
-        } else if (scores.c === maxScore) {
-            type = "靈感爆棚的開拓者";
-            content = `<div class='light'><strong>✨ 正向光芒：</strong>點子多、敢挑戰。能為僵化流程帶來創意。</div>
-                       <div class='shadow'><strong>⚠️ 可能困擾：</strong>三分鐘熱度，常丟出點子後把收尾留給同事。</div>
-                       <div class='advice'><strong>💡 修煉建議：</strong>練習把一個點子「落地」完成，尊重 SOP 是為了安全與品質。</div>`;
-        } else {
-            type = "踏實穩定的守護者";
-            content = `<div class='light'><strong>✨ 正向光芒：</strong>沉穩耐操，對交辦事務極度負責。是單位的基石。</div>
-                       <div class='shadow'><strong>⚠️ 可能困擾：</strong>應變力弱，遇到突發狀況容易當機，且太過被動。</div>
-                       <div class='advice'><strong>💡 修煉建議：</strong>練習「主動回報」進度，不要等主管問才說。</div>`;
-        }
-
-        document.getElementById('result-content').innerHTML = `<h3>你的類型：${type}</h3>${content}`;
+        // 顯示結果給學生看
+        document.getElementById('result-content').innerHTML = `<h3>你的類型：${type}</h3><p>分析內容加載中...</p>`;
+        
+        // 異步回傳 Google Sheet
+        fetch(scriptURL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: 'result=' + encodeURIComponent(type)
+        }).then(() => {
+            document.getElementById('loading-msg').innerText = "數據已成功回報至老師的試算表。";
+        }).catch(e => console.error(e));
     }
-
     renderQuestion();
 </script>
-
 </body>
 </html>
