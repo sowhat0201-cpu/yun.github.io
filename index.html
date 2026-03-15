@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>職場實習生類型測驗｜未來職人探險</title>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --accent: #3498db;
+            --bg: #f4f7f6;
+        }
+        body { font-family: "Microsoft JhengHei", sans-serif; background: var(--bg); color: var(--primary); line-height: 1.6; margin: 0; padding: 20px; }
+        .container { max-width: 700px; margin: 0 auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        h1 { text-align: center; color: var(--accent); }
+        .intro { margin-bottom: 30px; border-bottom: 2px solid #eee; padding-bottom: 20px; }
+        .question { display: none; }
+        .question.active { display: block; animation: fadeIn 0.5s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .options { list-style: none; padding: 0; }
+        .options li { margin: 10px 0; }
+        button { width: 100%; padding: 12px; border: 1px solid var(--accent); background: white; border-radius: 8px; cursor: pointer; transition: 0.3s; font-size: 16px; text-align: left; }
+        button:hover { background: var(--accent); color: white; }
+        .progress { margin-bottom: 20px; height: 10px; background: #eee; border-radius: 5px; overflow: hidden; }
+        .progress-bar { height: 100%; background: var(--accent); width: 0%; transition: 0.3s; }
+        #result { display: none; }
+        .type-box { padding: 20px; border-radius: 10px; margin-top: 20px; }
+        .light { border-left: 5px solid #27ae60; background: #f0fff4; padding: 10px; margin: 10px 0; }
+        .shadow { border-left: 5px solid #e74c3c; background: #fff5f5; padding: 10px; margin: 10px 0; }
+        .advice { background: #ebf8ff; padding: 15px; border-radius: 8px; border: 1px dashed #3182ce; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div id="quiz-box">
+        <h1>🔍 職場實習生類型測驗</h1>
+        <div class="intro">這是一場職涯冒險。請根據第一直覺選擇最符合你的選項。</div>
+        <div class="progress"><div class="progress-bar" id="pb"></div></div>
+        <div id="question-container"></div>
+    </div>
+
+    <div id="result">
+        <h1>📊 你的職涯分身是...</h1>
+        <div id="result-content"></div>
+        <button onclick="location.reload()" style="text-align:center; margin-top:20px;">重新測驗</button>
+    </div>
+</div>
+
+<script>
+    const questions = [
+        { q: "實習第一天報到，面對全新環境與同事，你會？", a: "觀察職稱與座位建立架構圖", b: "微笑打招呼記住大家名字", c: "思考辦公室動線哪裡可以更酷", d: "安靜待在位子等待指令" },
+        { q: "拿到厚厚一疊「實習生須知」，你的閱讀習慣是？", a: "直接看最後的考核標準", b: "先看福利與員工聚餐部分", c: "隨意翻閱希望有圖解版", d: "從第一頁開始認真劃重點" },
+        { q: "主管正在教導複雜的操作流程，你通常會？", a: "邊聽邊思考有沒有省時捷徑", b: "觀察主管表情表現出受教樣子", c: "想試試看不用手冊能不能成功", d: "拿出筆記本詳細記錄動作" },
+        { q: "午高峰現場混亂且每個人口氣不好，你會？", a: "進入自動模式精準完成任務", b: "壓力很大擔心大家在生我的氣", c: "覺得刺激想跳出來指揮大家", d: "更加小心翼翼深怕犯錯被罵" },
+        { q: "打翻了重要食材或文件，你的反應是？", a: "立刻計算損失與時間並通報", b: "非常愧疚一直跟身邊人道歉", c: "腦袋想著創意方式掩蓋或補救", d: "愣住一秒後默默開始清理" },
+        { q: "對於「重複做一樣的事」，你的看法是？", a: "享受效率變快的極致感", b: "能跟同事聊天就沒關係", c: "想辦法自動化它否則很折磨", d: "很有安全感喜歡知道要做什麼" },
+        { q: "發現學長姐流程有誤，你會？", a: "拿數據證據私下提醒他", b: "委婉詢問：這樣做會更好嗎？", c: "在心裡笑他改用新方法做給他看", d: "覺得他是前輩照做就好" },
+        { q: "大家在抱怨主管很兇，你會？", a: "冷靜分析主管兇的背後邏輯", b: "帶頭安慰受挫同事提供情緒價值", c: "講主管笑話化解氣氛", d: "默默聽著不發表意見怕被傳出去" },
+        { q: "主管突然交辦沒學過的任務且明天要交？", a: "通宵查資料把它做出來", b: "找關係好的同事求助帶我做", c: "興奮終於不用做無聊的事了", d: "焦慮希望能有詳細範本參考" },
+        { q: "你最喜歡的主管類型是？", a: "講求邏輯、不講廢話", b: "親切理解我感受的主管", c: "給我很大發揮空間不愛管細節", d: "指令清晰讓我很有安全感" },
+        { q: "在團隊中你覺得自己最像？", a: "大腦（分析決策）", b: "心臟（聯繫感情）", c: "手腳（行動實驗）", d: "脊椎（穩定支撐）" },
+        { q: "工作出錯需要「扛責」時，你的態度是？", a: "絕對負責並提交改進報告", b: "因為拖累大家而難過很久", c: "解釋動機希望大家看重初衷", d: "認錯接受處分後更加謹慎" },
+        { q: "對於職場中的「社交應酬」看法？", a: "除非對升遷有助否則浪費時間", b: "非常重要是建立默契時刻", c: "喜歡有趣討厭死板應酬", d: "覺得累只想趕快回家休息" },
+        { q: "主管稱讚你做得好，內心獨白是？", a: "我確實比別人有效率", b: "主管終於認可我了要更努力", c: "下次試更瘋狂做法讓他驚訝", d: "鬆口氣不用擔心表現不好了" },
+        { q: "創意被主管當眾否決時？", a: "詢問理由回家優化再提", b: "覺得受挫是否我這個人有問題", c: "覺得主管沒眼光默默給他扣分", d: "喔好那我就照舊方法做" },
+        { q: "發現還有很多技能沒學會，你會？", a: "整理清單找主管前輩請教", b: "結交到的朋友比技能更重要", c: "打算回家自己實驗不被限制", d: "遺憾但不敢主動要求學習" },
+        { q: "在忙碌環境中，最受不了哪種同事？", a: "慢吞吞還一直出錯的人", b: "口氣差不顧別人感受的人", c: "墨守成規一點彈性都沒有的人", d: "喜怒無常指令變來變去的人" },
+        { q: "發現公司有潛在巨大危機？", a: "提出數據化解決方案", b: "跟信任同事商量看大家想法", c: "覺得是改變現狀機會想試奇招", d: "告訴直屬主管聽從指示" },
+        { q: "職場情緒管理最難的是？", a: "面對蠢問題保持專業", b: "面對衝突保持微笑", c: "面對無聊保持熱情", d: "面對壓力保持清醒" },
+        { q: "結束實習當天，希望留下的印象？", a: "專業且高產能的人才", b: "溫暖好相處貼心的夥伴", c: "思維跳躍有潛力的新星", d: "認真負責穩定的基石" }
+    ];
+
+    let scores = { a: 0, b: 0, c: 0, d: 0 };
+    let currentQ = 0;
+
+    function renderQuestion() {
+        if (currentQ >= questions.length) {
+            showResult();
+            return;
+        }
+        const qData = questions[currentQ];
+        let html = `<div class="question active">
+            <p><strong>第 ${currentQ + 1} 題：${qData.q}</strong></p>
+            <ul class="options">
+                <li><button onclick="next('a')">(A) ${qData.a}</button></li>
+                <li><button onclick="next('b')">(B) ${qData.b}</button></li>
+                <li><button onclick="next('c')">(C) ${qData.c}</button></li>
+                <li><button onclick="next('d')">(D) ${qData.d}</button></li>
+            </ul>
+        </div>`;
+        document.getElementById('question-container').innerHTML = html;
+        document.getElementById('pb').style.width = ((currentQ / questions.length) * 100) + "%";
+    }
+
+    function next(choice) {
+        scores[choice]++;
+        currentQ++;
+        renderQuestion();
+    }
+
+    function showResult() {
+        document.getElementById('quiz-box').style.display = 'none';
+        document.getElementById('result').style.display = 'block';
+        
+        let maxScore = Math.max(scores.a, scores.b, scores.c, scores.d);
+        let type = '';
+        let content = '';
+
+        if (scores.a === maxScore) {
+            type = "精準高效的領航員";
+            content = `<div class='light'><strong>✨ 正向光芒：</strong>邏輯強、追求卓越。是單位中可靠的戰鬥力。</div>
+                       <div class='shadow'><strong>⚠️ 可能困擾：</strong>忽略情感顯得冷漠，對人要求過高時會讓同事壓力巨大。</div>
+                       <div class='advice'><strong>💡 修煉建議：</strong>學會在指正前先說聲「辛苦了」，理解職場不只有 0 與 1。</div>`;
+        } else if (scores.b === maxScore) {
+            type = "溫暖感性的潤滑劑";
+            content = `<div class='light'><strong>✨ 正向光芒：</strong>共感力高，能緩解氣氛，是大家的心理支柱。</div>
+                       <div class='shadow'><strong>⚠️ 可能困擾：</strong>難以拒絕無理要求，可能為了顧及面子而不敢指出問題。</div>
+                       <div class='advice'><strong>💡 修煉建議：</strong>練習「對事不對人」，好的情緒邊界才能讓你走得更遠。</div>`;
+        } else if (scores.c === maxScore) {
+            type = "靈感爆棚的開拓者";
+            content = `<div class='light'><strong>✨ 正向光芒：</strong>點子多、敢挑戰。能為僵化流程帶來創意。</div>
+                       <div class='shadow'><strong>⚠️ 可能困擾：</strong>三分鐘熱度，常丟出點子後把收尾留給同事。</div>
+                       <div class='advice'><strong>💡 修煉建議：</strong>練習把一個點子「落地」完成，尊重 SOP 是為了安全與品質。</div>`;
+        } else {
+            type = "踏實穩定的守護者";
+            content = `<div class='light'><strong>✨ 正向光芒：</strong>沉穩耐操，對交辦事務極度負責。是單位的基石。</div>
+                       <div class='shadow'><strong>⚠️ 可能困擾：</strong>應變力弱，遇到突發狀況容易當機，且太過被動。</div>
+                       <div class='advice'><strong>💡 修煉建議：</strong>練習「主動回報」進度，不要等主管問才說。</div>`;
+        }
+
+        document.getElementById('result-content').innerHTML = `<h3>你的類型：${type}</h3>${content}`;
+    }
+
+    renderQuestion();
+</script>
+
+</body>
+</html>
